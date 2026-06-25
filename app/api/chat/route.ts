@@ -1,5 +1,4 @@
 import { db } from "@/lib/db";
-import { error } from "console";
 import { NextRequest, NextResponse } from "next/server";
 
 interface ChatMessage {
@@ -29,7 +28,8 @@ Always provide clear, practical answers. Use proper code formatting when showing
     .join("\n\n");
 
   try {
-    const response = await fetch("http://localhost:11434/api/generate", {
+    const ollamaApiBase = process.env.OLLAMA_API_BASE || "http://localhost:11434";
+    const response = await fetch(`${ollamaApiBase}/api/generate`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
