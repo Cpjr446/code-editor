@@ -51,6 +51,22 @@ const playground = await db.playground.findUnique({
       return Response.json({ error: "Invalid JSON structure" }, { status: 500 });
     }
 
+    // Save/cache the generated template structure to the database
+    await db.templateFile.upsert({
+      where: {
+        playgroundId: id,
+      },
+      update: {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        content: result as any,
+      },
+      create: {
+        playgroundId: id,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        content: result as any,
+      },
+    });
+
     return Response.json({ success: true, templateJson: result }, { status: 200 });
   } catch (error) {
       console.error("Error generating template JSON:", error);
