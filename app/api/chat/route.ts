@@ -29,11 +29,19 @@ Always provide clear, practical answers. Use proper code formatting when showing
 
   try {
     const ollamaApiBase = process.env.OLLAMA_API_BASE || "http://localhost:11434";
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+    if (process.env.OLLAMA_AUTH_HEADER) {
+      headers["Authorization"] = process.env.OLLAMA_AUTH_HEADER
+        .replace(/[\r\n]+/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
     const response = await fetch(`${ollamaApiBase}/api/generate`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers,
       body: JSON.stringify({
         model: "codellama:latest",
         prompt: prompt,

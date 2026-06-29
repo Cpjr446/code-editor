@@ -199,6 +199,10 @@ export const AIChatSidePanel: React.FC<AIChatSidePanelProps> = ({
       });
 
       if (response.ok) {
+        const contentType = response.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+          throw new Error("Chat API did not return a JSON response");
+        }
         const data = await response.json();
 
         setMessages((prev) => [

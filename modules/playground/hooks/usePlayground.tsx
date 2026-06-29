@@ -55,6 +55,11 @@ export const usePlayground = (id: string): UsePlaygroundReturn => {
 
       if (!res.ok) throw new Error(`Failed to load template: ${res.status}`);
 
+      const contentType = res.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("Template API did not return a JSON response");
+      }
+
       const templateRes = await res.json();
 
       if (templateRes.templateJson && Array.isArray(templateRes.templateJson)) {
