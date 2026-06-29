@@ -70,6 +70,11 @@ export const useAISuggestions = (): UseAISuggestionsReturn => {
                         throw new Error(`API responded with status ${response.status}`);
                     }
 
+                    const contentType = response.headers.get("content-type");
+                    if (!contentType || !contentType.includes("application/json")) {
+                        throw new Error("API did not return a JSON response");
+                    }
+
                     const data = await response.json()
 
                     if (data.suggestion) {

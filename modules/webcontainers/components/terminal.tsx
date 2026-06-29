@@ -1,11 +1,9 @@
 "use client";
 
 import React, { useEffect, useRef, useState, useCallback, forwardRef, useImperativeHandle } from "react";
-import { Terminal } from "xterm";
-import { FitAddon } from "xterm-addon-fit";
-import { WebLinksAddon } from "xterm-addon-web-links";
-import { SearchAddon } from "xterm-addon-search";
-import "xterm/css/xterm.css";
+import type { Terminal } from "xterm";
+import type { FitAddon } from "xterm-addon-fit";
+import type { SearchAddon } from "xterm-addon-search";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Copy, Trash2, Download } from "lucide-react";
@@ -36,6 +34,7 @@ TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({
   const term = useRef<Terminal | null>(null);
   const fitAddon = useRef<FitAddon | null>(null);
   const searchAddon = useRef<SearchAddon | null>(null);
+  const pendingLogs = useRef<string[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [showSearch, setShowSearch] = useState(false);
@@ -110,6 +109,8 @@ TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({
     writeToTerminal: (data: string) => {
       if (term.current) {
         term.current.write(data);
+      } else {
+        pendingLogs.current.push(data);
       }
     },
     clearTerminal: () => {
@@ -272,8 +273,15 @@ TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({
     }
   }, [executeCommand, writePrompt]);
 
-  const initializeTerminal = useCallback(() => {
+  const initializeTerminal = useCallback(async () => {
     if (!terminalRef.current || term.current) return;
+
+    const { Terminal } = await import("xterm");
+    const { FitAddon } = await import("xterm-addon-fit");
+    const { WebLinksAddon } = await import("xterm-addon-web-links");
+    const { SearchAddon } = await import("xterm-addon-search");
+    // @ts-ignore
+    await import("xterm/css/xterm.css");
 
     const terminal = new Terminal({
       cursorBlink: true,
@@ -302,6 +310,11 @@ TerminalComponent = forwardRef<TerminalRef, TerminalProps>(({
     fitAddon.current = fitAddonInstance;
     searchAddon.current = searchAddonInstance;
     term.current = terminal;
+
+    if (pendingLogs.current.length > 0) {
+      pendingLogs.current.forEach((log) => terminal.write(log));
+      pendingLogs.current = [];
+    }
 
     // Handle terminal input
     terminal.onData(handleTerminalInput);
